@@ -1,16 +1,16 @@
 # hotel_booking_app
 
-A new Flutter project.
+Nome do aplicativo: Busca Hotéis
 
-## Getting Started
+## Integrantes:
 
-This project is a starting point for a Flutter application.
+12217009 - Alessandro Martins Torres
+12217004 - Nathalia Victoria de Sá Barcelos
+122100025 - Hiago Santos
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+ ## Links
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Trello: https://trello.com/invite/projeto4155/ATTI631f55fe4cb7642461563eaf92418b387D2983C9 /
+
+Git: https://github.com/AlleexMartinsT/projeto4
