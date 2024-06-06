@@ -4,9 +4,9 @@ Nome do aplicativo: Busca Hotéis
 
 ## Integrantes:
 
-12217009 - Alessandro Martins Torres
-12217004 - Nathalia Victoria de Sá Barcelos
-122100025 - Hiago Santos
+12217009 - Alessandro Martins Torres /
+12217004 - Nathalia Victoria de Sá Barcelos /
+122100025 - Hiago Santos /
 
 
  ## Links
