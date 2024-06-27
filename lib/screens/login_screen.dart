@@ -11,7 +11,7 @@ class LoginScreen extends StatelessWidget {
         email: _emailController.text,
         password: _passwordController.text,
       );
-      Navigator.pushNamed(context, '/hotelOverview');
+      Navigator.pushNamed(context, '/main'); // Alterado para '/main'
     } on FirebaseAuthException catch (e) {
       print('Failed to sign in with email and password: $e');
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -71,6 +71,7 @@ class LoginScreen extends StatelessWidget {
                   fillColor: Colors.green.shade200,
                 ),
                 obscureText: true,
+                onSubmitted: (_) => _login(context),
               ),
               Align(
                 alignment: Alignment.centerRight,

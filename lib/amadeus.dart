@@ -1,111 +1,141 @@
-// amadeus.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'model/hotel.dart';
 
 class Amadeus {
   String? token;
-  late String clientId;
-  late String clientSecret;
-
-  void setEnvironment(Map<String, String> env) {
-    clientId = env['client_id']!;
-    clientSecret = env['client_secret']!;
-  }
+  final String clientId = 'J3fDHUv36Fzv4XcnSCROOJYvLLnmoVj5';
+  final String clientSecret = 'Gs7O9Wai4gfujGd8';
 
   Future<String?> generateAccessToken() async {
-    if (clientId.isEmpty || clientSecret.isEmpty) {
-      throw Exception("Client ID or Client Secret is not set");
-    }
-
     Uri authorizationUri = Uri.parse("https://test.api.amadeus.com/v1/security/oauth2/token");
 
     try {
-      http.Response response = await http.post(
+      final response = await http.post(
         authorizationUri,
-        headers: {"Content-type": "application/x-www-form-urlencoded"},
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
         body: "grant_type=client_credentials&client_id=$clientId&client_secret=$clientSecret",
       );
 
       if (response.statusCode == 200) {
-        Map<String, dynamic> data = jsonDecode(response.body);
+        final data = jsonDecode(response.body);
         token = data['access_token'];
         return token;
       } else {
-        print("Error generating token --> ${response.body}");
+        print("Failed to generate access token: ${response.body}");
         return null;
       }
     } catch (e) {
-      print("Error generating token --> $e");
+      print("Error generating token: $e");
       return null;
     }
   }
 
-  Future<void> getHotelOffers(String cityCode, DateTime checkInDate, DateTime checkOutDate, int adults) async {
+  Future<List<Hotel>> fetchHotelOffers(String cityCode) async {
+    final accessToken = await generateAccessToken();
+    if (accessToken == null) return [];
+
+    Uri uri = Uri.parse("https://test.api.amadeus.com/v2/shopping/hotel-offers?cityCode=$cityCode&page%5Blimit%5D=10");
+
     try {
-      String? accessToken = await generateAccessToken();
-
-      if (accessToken == null) {
-        print("Failed to obtain access token");
-        return;
-      }
-
-      Uri uri = Uri.parse("https://test.api.amadeus.com/v3/shopping/hotel-offers?cityCode=$cityCode&checkInDate=${checkInDate.toIso8601String().split('T')[0]}&checkOutDate=${checkOutDate.toIso8601String().split('T')[0]}&adults=$adults");
-      http.Response response = await http.get(
+      final response = await http.get(
         uri,
         headers: {"Authorization": "Bearer $accessToken"},
       );
 
       if (response.statusCode == 200) {
-        Map<String, dynamic> data = jsonDecode(response.body);
-        print(data);
-      } else {
-        print("Error getting hotel offers --> ${response.body}");
-      }
-    } catch (e) {
-      print("Error occurred: $e");
-    }
-  }
+        final responseData = jsonDecode(response.body);
+        List<Hotel> hotels = [];
 
-  Future<List<Hotel>> fetchHotels(String name) async {
-    try {
-      String? accessToken = await generateAccessToken();
-
-      if (accessToken == null) {
-        print("Failed to obtain access token");
-        return [];
-      }
-
-      Uri uri = Uri.parse("https://test.api.amadeus.com/v1/reference-data/locations/hotels?keyword=$name&subType=HOTEL_GDS&lang=EN&max=20");
-      http.Response response = await http.get(
-        uri,
-        headers: {"Authorization": "Bearer $accessToken"},
-      );
-
-      if (response.statusCode == 200) {
-        List<dynamic> data = jsonDecode(response.body)['data'];
-        List<Hotel> fetchedHotels = [];
-
-        for (int i = 0; i < data.length; i++) {
-          Hotel hotel = Hotel(
-            id: data[i]['id'],
-            name: data[i]['name'],
-            iataCode: data[i]['iataCode'],
-            subType: data[i]['subType'],
-            hotelId: data[i]['hotelId'],
-            cityName: data[i]['address']['cityName'],
-            countryCode: data[i]['address']['countryCode'],
-          );
-          fetchedHotels.add(hotel);
+        for (var hotelInfo in responseData['data']) {
+          final hotel = Hotel.fromJson(hotelInfo['hotel']);
+          hotels.add(hotel);
         }
-        return fetchedHotels;
+        return hotels;
       } else {
-        print("Error fetching hotels --> ${response.body}");
+        print("Error fetching hotel offers: ${response.body}");
         return [];
       }
     } catch (e) {
       print("Error occurred: $e");
       return [];
+    }
+  }
+
+  Future<Hotel?> fetchHotelById(String hotelId) async {
+    final accessToken = await generateAccessToken();
+    if (accessToken == null) return null;
+
+    Uri uri = Uri.parse("https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-hotels?hotelIds=$hotelId");
+
+    try {
+      final response = await http.get(
+        uri,
+        headers: {"Authorization": "Bearer $accessToken"},
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        if (responseData['data'] != null && responseData['data'].isNotEmpty) {
+          return Hotel.fromJson(responseData['data'][0]);
+        } else {
+          print("No data found for the given hotel ID");
+          return null;
+        }
+      } else {
+        print("Error fetching hotel: ${response.body}");
+        return null;
+      }
+    } catch (e) {
+      print("Error occurred: $e");
+      return null;
+    }
+  }
+
+  Future<bool> bookHotel({
+    required String hotelId,
+    required String name,
+    required String email,
+    required DateTime checkInDate,
+    required DateTime checkOutDate,
+  }) async {
+    final accessToken = await generateAccessToken();
+    if (accessToken == null) return false;
+
+    final bookingDetails = {
+      'data': {
+        'hotelId': hotelId,
+        'guests': [
+          {
+            'name': name,
+            'email': email,
+          }
+        ],
+        'checkInDate': checkInDate.toIso8601String(),
+        'checkOutDate': checkOutDate.toIso8601String(),
+      }
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://test.api.amadeus.com/v1/booking/hotel-bookings'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode(bookingDetails),
+      );
+
+      if (response.statusCode == 200) {
+        print("Booking successful: ${response.body}");
+        return true;
+      } else {
+        print("Booking failed: ${response.body}");
+        return false;
+      }
+    } catch (e) {
+      print("Error occurred: $e");
+      return false;
     }
   }
 }

@@ -1,4 +1,3 @@
-// lib/model/hotel.dart
 class Hotel {
   final String id;
   final String name;
@@ -7,6 +6,8 @@ class Hotel {
   final String hotelId;
   final String cityName;
   final String countryCode;
+  final String? imageUrl;
+  final String? description;
 
   Hotel({
     required this.id,
@@ -16,18 +17,23 @@ class Hotel {
     required this.hotelId,
     required this.cityName,
     required this.countryCode,
+    this.imageUrl,
+    this.description,
   });
 
-  // Método factory para criar uma instância de Hotel a partir de um JSON
   factory Hotel.fromJson(Map<String, dynamic> json) {
     return Hotel(
-      id: json['id'],
-      name: json['name'],
-      iataCode: json['iataCode'],
-      subType: json['subType'],
-      hotelId: json['hotelIds'][0],
-      cityName: json['address']['cityName'],
-      countryCode: json['address']['countryCode'],
+      id: json['hotelId'] ?? '',
+      name: json['name'] ?? '',
+      iataCode: json['iataCode'] ?? '',
+      subType: json['type'] ?? '',
+      hotelId: json['hotelId'] ?? '',
+      cityName: json['address']['cityName'] ?? '',
+      countryCode: json['address']['countryCode'] ?? '',
+      imageUrl: json['media'] != null && json['media'].isNotEmpty
+          ? json['media'][0]['uri']
+          : null,
+      description: json['description'] ?? '',
     );
   }
 }
